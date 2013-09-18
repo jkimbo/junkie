@@ -1,0 +1,24 @@
+/**
+ * Config
+ */
+module.exports = {
+    'networks': [
+        {
+            type: 'twitter',
+            user: 'Twitter User ID',
+            api: {
+                consumer_key: 'Twitter',
+                consumer_secret: 'API',
+                access_token_key: 'keys',
+                access_token_secret: 'go here'
+            }
+        },
+        {
+            type: 'flickr',
+            user: 'Flickr User',
+            api: {
+                key: 'Flickr Key'
+            }
+        }
+    ]
+};
