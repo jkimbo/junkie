@@ -20,5 +20,7 @@ module.exports = {
                 key: 'Flickr Key'
             }
         }
-    ]
+    ],
+    port: 8888, // socket.io port
+    channel: 'event'
 };

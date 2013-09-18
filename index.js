@@ -10,6 +10,8 @@ var availableNetworks = {
 };
 
 // Start socket.io
+var io = socket.listen(config.port);
+io.set('log level', 1);
 
 config.networks.forEach(function(network) {
     if (network.type in availableNetworks) {
@@ -19,6 +21,7 @@ config.networks.forEach(function(network) {
         });
         feed.on('data', function(data) {
             console.log(data);
+            io.sockets.emit(config.channel, data);
         });
         feed.start();
     } else {
