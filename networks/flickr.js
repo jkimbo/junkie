@@ -59,6 +59,11 @@ Flickr.prototype.query = function(method, args, cb) {
 
     args = _.extend(args, this.args);
     args.method = method;
+
+    if (this.auth_token) {
+        args.auth_token = this.auth_token;
+    }
+
     var args_string = this.generateUrl(args);
 
     var p;
@@ -155,12 +160,48 @@ Flickr.prototype.authenticate = function() {
             .then(function(data) {
                 self.auth_token = data.body.auth.token._content;
                 p.resolve(self.auth_token);
-            }).fail(function(error) {
-                p.reject(error);
             });
         });
-    }).fail(function(error) {
-        throw error;
+    });
+
+    return p.promise;
+};
+
+// Get recently updated photos
+// Returns promise with array of photos in it
+Flickr.prototype.getRecentPhotos = function() {
+    var p = Q.defer();
+    var self = this;
+
+    var photos = [];
+
+    this.query('flickr.photos.recentlyUpdated',
+        {
+            min_date: 1364792400
+        })
+    .then(function(data) {
+        // Loop through each photo and get their sizes
+        photos = data.body.photos.photo;
+        var promises = [];
+
+        photos.forEach(function(photo, index) {
+            var promise = Q.defer();
+            promises.push(promise.promise);
+
+            self.query('flickr.photos.getSizes',
+                {
+                    photo_id: photo.id
+                })
+            .then(function(data) {
+                photos[index].sizes = data.body.sizes.size;
+                promise.resolve();
+            });
+        });
+
+        // Wait till all the request have finished
+        return Q.all(promises);
+    }).then(function() {
+        p.resolve(photos);
     });
 
     return p.promise;
@@ -173,14 +214,9 @@ Flickr.prototype.start = function() {
     auth.then(function(auth_token) {
         self.emit('connected');
         // Get recently updated photos
-        self.query(
-            'flickr.photos.recentlyUpdated',
-            {
-                auth_token: auth_token,
-                min_date: 1364792400
-            }
-        ).then(function(data) {
-            console.log(data.body);
+        self.getRecentPhotos()
+        .then(function(photos) {
+            self.emit('data', photos);
         });
         // Start timer
     }).fail(function(error) {
