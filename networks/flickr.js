@@ -175,9 +175,18 @@ Flickr.prototype.getRecentPhotos = function() {
 
     var photos = [];
 
+    // get min date
+    var min_date;
+    if (!this.last_checked) {
+        min_date = this.config.start;
+    } else {
+        min_date = this.last_checked;
+    }
+    this.last_checked = new Date().getTime();
+
     this.query('flickr.photos.recentlyUpdated',
         {
-            min_date: 1364792400
+            min_date: min_date
         })
     .then(function(data) {
         // Loop through each photo and get their sizes
@@ -218,7 +227,14 @@ Flickr.prototype.start = function() {
         .then(function(photos) {
             self.emit('data', photos);
         });
+
         // Start timer
+        self.intervalId = setInterval(function() {
+            self.getRecentPhotos()
+            .then(function(photos) {
+                self.emit('data', photos);
+            });
+        }, self.config.refresh);
     }).fail(function(error) {
         throw error;
     });

@@ -17,6 +17,7 @@ module.exports = {
             type: 'flickr',
             user: 'Flickr User',
             refresh: 300000, // 5 mins
+            start: 1356998400, // 00:00:00 01/01/2013
             api: {
                 key: 'Flickr Key',
                 secret: 'Shared secret'
