@@ -55,12 +55,20 @@ Flickr.prototype.generateSignature = function(params) {
 
 // Make api request
 Flickr.prototype.query = function(method, args, cb) {
+    if (!args) args = {};
+
     args = _.extend(args, this.args);
     args.method = method;
     var args_string = this.generateUrl(args);
 
-    if (typeof cb !== 'function') {
-        throw new Error('Callback must be a function');
+    var p;
+
+    if (!cb) {
+        p = Q.defer();
+    } else {
+        if (typeof cb !== 'function') {
+            throw new Error('Callback must be a function');
+        }
     }
 
     // make request
@@ -69,8 +77,25 @@ Flickr.prototype.query = function(method, args, cb) {
             url: this.config.baseUrl + args_string,
             json: true
         },
-        cb
+        function(error, response, body) {
+            if (error) {
+                throw error;
+            }
+
+            if (!cb) {
+                p.resolve({
+                    response: response,
+                    body: body
+                });
+            } else {
+                cb(response, body);
+            }
+        }
     );
+
+    if (!cb) {
+        return p.promise;
+    }
 };
 
 // Generate API request url
@@ -96,12 +121,9 @@ Flickr.prototype.authenticate = function() {
 
     // Get hold of a 'frob' (requires the method to be signed, does not require
     // authentication)
-    this.query('flickr.auth.getFrob', {}, function(error, response, body) {
-        if (error) {
-            p.reject(error);
-        }
-
-        self.frob = body.frob._content;
+    this.query('flickr.auth.getFrob')
+    .then(function(data) {
+        self.frob = data.body.frob._content;
 
         var auth_link = 'http://flickr.com/services/auth/' +
             self.generateUrl(
@@ -129,19 +151,16 @@ Flickr.prototype.authenticate = function() {
             data = data.toString().trim();
 
             // Get auth token
-            self.query(
-                'flickr.auth.getToken',
-                { frob: self.frob },
-                function(error, response, body) {
-                    if (error) {
-                        p.reject(error);
-                    }
-                    self.auth_token = body.auth.token._content;
-
-                    p.resolve(self.auth_token);
-                }
-            );
+            self.query('flickr.auth.getToken', { frob: self.frob })
+            .then(function(data) {
+                self.auth_token = data.body.auth.token._content;
+                p.resolve(self.auth_token);
+            }).fail(function(error) {
+                p.reject(error);
+            });
         });
+    }).fail(function(error) {
+        throw error;
     });
 
     return p.promise;
@@ -159,14 +178,11 @@ Flickr.prototype.start = function() {
             {
                 auth_token: auth_token,
                 min_date: 1364792400
-            },
-            function(error, response, body) {
-                if (error) {
-                    throw error;
-                }
-                console.log(body);
             }
-        );
+        ).then(function(data) {
+            console.log(data.body);
+        });
+        // Start timer
     }).fail(function(error) {
         throw error;
     });
