@@ -17,7 +17,8 @@ module.exports = {
             type: 'flickr',
             user: 'Flickr User',
             api: {
-                key: 'Flickr Key'
+                key: 'Flickr Key',
+                secret: 'Shared secret'
             }
         }
     ],

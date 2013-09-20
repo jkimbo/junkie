@@ -2,11 +2,13 @@
  * Social Junkie
  */
 var socket = require('socket.io');
+var fs = require('fs');
 
 var config = require('./config');
 
 var availableNetworks = {
-    'twitter': require('./networks/twitter')
+    'twitter': require('./networks/twitter'),
+    'flickr': require('./networks/flickr')
 };
 
 // Start socket.io
