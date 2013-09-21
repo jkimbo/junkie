@@ -14,7 +14,6 @@ var Twitter = function(config) {
 
     // setup twitter access
     this.twit = new twitter(config.api);
-
 };
 
 Twitter.prototype.start = function() {
@@ -22,12 +21,7 @@ Twitter.prototype.start = function() {
     this.twit.stream('user', { with: 'user' }, function(stream) {
         self.emit('connected');
         stream.on('data', function (data) {
-            if (data.id) {
-                self.emit('data', {
-                    type: 'twitter',
-                    data: data
-                });
-            }
+            self.emit('data', data);
         });
         stream.on('end', function (response) {
             self.emit('end', response);

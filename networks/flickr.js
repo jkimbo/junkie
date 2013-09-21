@@ -6,7 +6,6 @@
 var events = require('events'),
     crypto = require('crypto'),
     request = require('request'),
-    open = require('open'),
     Q = require('q'),
     _ = require('lodash');
 
@@ -26,9 +25,6 @@ var Flickr = function(config) {
         nojsoncallback: '1',
         api_key: this.config.api.key
     };
-
-    // setup twitter access
-    //this.flickr = new FlickrAPI(config.api.key, config.api.secret);
 };
 
 // Generate API signature from shared secret
@@ -140,11 +136,9 @@ Flickr.prototype.authenticate = function() {
             );
 
         console.log(
-            'Opening the following link in your browser: ',
+            'Open the following link in your browser: ',
             auth_link
         );
-
-        open(auth_link);
 
         // now wait for user to signify that it is ready to carry on
         var stdin = process.stdin, stdout = process.stdout;
@@ -178,7 +172,11 @@ Flickr.prototype.getRecentPhotos = function() {
     // get min date
     var min_date;
     if (!this.last_checked) {
-        min_date = this.config.start;
+        if (this.config.start) {
+            min_date = this.config.start;
+        } else {
+            min_date = new Date().getTime();
+        }
     } else {
         min_date = this.last_checked;
     }
