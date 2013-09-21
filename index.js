@@ -22,7 +22,9 @@ io.set('log level', 1);
 // When a browser is connected to a socket
 io.sockets.on('connection', function (socket) {
     // Give the browser the buffered data
-    socket.emit(config.channel, buffer.getAll());
+    buffer.getAll().forEach(function(data) {
+        socket.emit(config.channel, data);
+    });
 });
 
 config.networks.forEach(function(network) {
