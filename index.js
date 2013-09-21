@@ -27,6 +27,10 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
+process.on('uncaughtException',function(error){
+    console.log(error);
+});
+
 config.networks.forEach(function(network) {
     if (network.type in availableNetworks) {
         feed = new availableNetworks[network.type](network);
