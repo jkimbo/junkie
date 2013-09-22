@@ -120,6 +120,12 @@ Flickr.prototype.authenticate = function() {
     var p = Q.defer();
     var self = this;
 
+    if (this.config.api.auth_token) {
+        self.auth_token = this.config.api.auth_token;
+        p.resolve(this.config.api.auth_token);
+        return p.promise;
+    }
+
     // Get hold of a 'frob' (requires the method to be signed, does not require
     // authentication)
     this.query('flickr.auth.getFrob')
@@ -153,6 +159,7 @@ Flickr.prototype.authenticate = function() {
             self.query('flickr.auth.getToken', { frob: self.frob })
             .then(function(data) {
                 self.auth_token = data.body.auth.token._content;
+                console.log('Auth token: ', self.auth_token);
                 p.resolve(self.auth_token);
             });
         });
