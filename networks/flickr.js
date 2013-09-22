@@ -7,6 +7,7 @@ var events = require('events'),
     crypto = require('crypto'),
     request = require('request'),
     Q = require('q'),
+    moment = require('moment-timezone'),
     _ = require('lodash');
 
 var Flickr = function(config) {
@@ -182,12 +183,12 @@ Flickr.prototype.getRecentPhotos = function() {
         if (this.config.start) {
             min_date = this.config.start;
         } else {
-            min_date = new Date().getTime();
+            min_date = moment().tz("America/New_York").format('X');
         }
     } else {
         min_date = this.last_checked;
     }
-    this.last_checked = new Date().getTime();
+    this.last_checked = moment().tz("America/New_York").format('X');
 
     this.query('flickr.photos.recentlyUpdated',
         {
@@ -231,6 +232,8 @@ Flickr.prototype.start = function() {
         self.getRecentPhotos()
         .then(function(photos) {
             self.emit('data', photos);
+        }).fail(function(error) {
+            console.log(error);
         });
 
         // Start timer
@@ -238,6 +241,8 @@ Flickr.prototype.start = function() {
             self.getRecentPhotos()
             .then(function(photos) {
                 self.emit('data', photos);
+            }).fail(function(error) {
+                console.log(error);
             });
         }, self.config.refresh);
     }).fail(function(error) {
