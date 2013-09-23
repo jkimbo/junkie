@@ -5,6 +5,8 @@
 
 var events = require('events');
 var twitter = require('ntwitter');
+var Q = require('q');
+var _ = require('lodash');
 
 var Twitter = function(config) {
     var self = this;
@@ -18,6 +20,14 @@ var Twitter = function(config) {
 
 Twitter.prototype.start = function() {
     var self = this;
+
+    if(this.config.preload) {
+        this.getFavorites()
+        .then(function(data) {
+            self.emit('data', data);
+        });
+    }
+
     this.twit.stream('user', { with: 'user' }, function(stream) {
         self.emit('connected');
         stream.on('data', function (data) {
@@ -32,6 +42,32 @@ Twitter.prototype.start = function() {
             self.emit('destroy');
         });
     });
+};
+
+Twitter.prototype.getFavorites = function() {
+    var p = Q.defer();
+    var self = this;
+    console.log('Getting favorites');
+    this.twit.get('/favorites/list.json', function(err, data) {
+        if (err) {
+            p.reject(err);
+        }
+        var favs = [];
+        _.each(data, function(tweet) {
+            favs.push(self.convertTweetToFav(tweet));
+        });
+        console.log(favs);
+        p.resolve(favs);
+    });
+    return p.promise;
+};
+
+Twitter.prototype.convertTweetToFav = function(tweet) {
+    var fav = {};
+    fav.event = 'favorite';
+    fav.target = tweet.user;
+    fav.target_object = tweet;
+    return fav;
 };
 
 Twitter.prototype.filterTweet = function(tweet) {
