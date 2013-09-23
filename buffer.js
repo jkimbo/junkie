@@ -12,7 +12,7 @@ var Buffer = function(buckets, options) {
     }, this));
 
     var defaults = {
-        'max': 20
+        'max': 40
     };
 
     this.options = _.extend(defaults, this.options);

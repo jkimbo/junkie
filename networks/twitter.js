@@ -21,7 +21,9 @@ Twitter.prototype.start = function() {
     this.twit.stream('user', { with: 'user' }, function(stream) {
         self.emit('connected');
         stream.on('data', function (data) {
-            self.emit('data', data);
+            if (self.filterTweet(data)) {
+                self.emit('data', data);
+            }
         });
         stream.on('end', function (response) {
             self.emit('end', response);
@@ -30,6 +32,29 @@ Twitter.prototype.start = function() {
             self.emit('destroy');
         });
     });
+};
+
+Twitter.prototype.filterTweet = function(tweet) {
+    var check = true;
+    var self = this;
+    if (typeof tweet.entities !== 'undefined' && tweet.entities.user_mentions.length > 0) {
+      _.each(tweet.entities.user_mentions, function(mention) {
+        if (mention.id == self.config.user) {
+          check = false;
+          return false;
+        }
+      });
+    }
+
+    if (typeof tweet.retweeted_status !== 'undefined') {
+      check = false;
+    }
+
+    if (typeof tweet.source !== 'undefined' && tweet.source.id !== self.config.user) {
+      check = false;
+    }
+
+    return check;
 };
 
 Twitter.prototype.__proto__ = events.EventEmitter.prototype;
